@@ -1,5 +1,6 @@
 from django import forms
 from .models import Recipe, Tag, RecipeIngredient
+from django.core.exceptions import ValidationError
 
 
 class RecipeCreateForm(forms.ModelForm):
@@ -17,6 +18,14 @@ class RecipeCreateForm(forms.ModelForm):
         self.fields['tags'].widget.attrs.update({
             'class': 'form-control tags'
         })
+
+    def clean_title(self):
+        title = self.cleaned_data['title']
+        if len(title) < 5:
+            raise ValidationError('More than 5 letters')
+        if title.capitalize() != title:
+            raise ValidationError('First letter should be capitalized')
+        return title
 
 
 class RecipeUpdateForm(forms.ModelForm):

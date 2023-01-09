@@ -5,7 +5,7 @@
 {%block content%}
 
 <div class="button-group">
-  <a href="{%url 'recipes:ing_create' recipe.slug%}" class="btn btn-dark mb-4 mt-3">Add ingredient</a>
+  <a href="{%url 'recipes:ing_create' recipe.slug%}" class="btn btn-dark mb-4 mt-3 {%if request.user != recipe.author and not request.user.is_superuser%} disabled {%endif%}">Add ingredient</a>
   <a href="{%url 'recipes:list'%}" class="btn btn-dark mb-4 mt-3">Back to recipe list</a>
 </div>
 
@@ -18,8 +18,8 @@
         <a href="#" class="btn btn-outline-dark btn-sm">{{tag.title}}</a>
       {%endfor%}
     </div>
-    <a href="{%url 'recipes:update' recipe.slug%}" class="btn btn-light">Edit</a>
-    <a href="{%url 'recipes:delete' recipe.slug%}" class="btn btn-danger">Delete</a>
+    <a href="{%url 'recipes:update' recipe.slug%}" class="btn btn-light {%if request.user != recipe.author and not request.user.is_superuser%} disabled {%endif%}">Edit</a>
+    <a href="{%url 'recipes:delete' recipe.slug%}" class="btn btn-danger {%if request.user != recipe.author and not request.user.is_superuser%} disabled {%endif%}">Delete</a>
   </div>
   <div class="card-footer text-muted">
     {{recipe.created_date}}
@@ -34,8 +34,8 @@
         <div class="card-body">
           <h5 class="card-title">{{ingredient.title}}</h5>
           <p class="card-text">{{ingredient.quantity}} - {{ingredient.get_unit_display.lower}}</p>
-          <a href="{%url 'recipes:ing_update' ingredient.recipe.slug ingredient.id%}" class="btn btn-light">Edit</a>
-          <a href="{%url 'recipes:ing_delete' ingredient.recipe.slug ingredient.id%}" class="btn btn-danger">Delete</a>
+          <a href="{%url 'recipes:ing_update' ingredient.recipe.slug ingredient.id%}" class="btn btn-light {%if request.user != recipe.author and not request.user.is_superuser%} disabled {%endif%}">Edit</a>
+          <a href="{%url 'recipes:ing_delete' ingredient.recipe.slug ingredient.id%}" class="btn btn-danger {%if request.user != recipe.author and not request.user.is_superuser%} disabled {%endif%}">Delete</a>
         </div>
         <div class="card-footer text-muted">
           {{ingredient.created_date}}

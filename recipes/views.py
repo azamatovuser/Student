@@ -3,12 +3,36 @@ from .models import Recipe, RecipeIngredient, Tag
 from django.contrib.auth.decorators import login_required
 from .forms import RecipeCreateForm, RecipeUpdateForm, TagForm, RecipeIngredientForm
 from django.contrib import messages
+from django.http import HttpResponse
 
 
 def recipe_list(request):
     recipes = Recipe.objects.filter(is_active=True).order_by('-id')
+    tags_list = Tag.objects.all()
+    q = request.GET.get('q')
+    tag = request.GET.get('tag')
+    if q:
+        recipes = recipes.filter(title__icontains=q)
+    if tag:
+        recipes = recipes.filter(tags__title=tag)
     ctx = {
-        "recipes": recipes
+        'recipes': recipes,
+        'tags_list': tags_list
+    }
+    return render(request, 'recipes/list.html', ctx)
+
+
+@login_required
+def my_recipes(request):
+    user = request.user
+    recipes = Recipe.objects.filter(author=user)
+    tags_list = Tag.objects.all()
+    tag = request.GET.get('tag')
+    if tag:
+        recipes = recipes.filter(tags__title=tag)
+    ctx = {
+        "recipes": recipes,
+        'tags_list': tags_list
     }
     return render(request, 'recipes/list.html', ctx)
 
@@ -43,6 +67,9 @@ def recipe_create(request, *args, **kwargs):
 def recipe_update(request, slug):
     obj = get_object_or_404(Recipe, slug=slug)
     form = RecipeUpdateForm(request.POST or None, instance=obj)
+    if request.user != obj.author:
+        if not request.user.is_superuser:
+            return HttpResponse('<h1>What are you doing?</h1>')
     if request.method == 'POST':
         form = RecipeUpdateForm(data=request.POST, instance=obj)
         if form.is_valid():
@@ -57,6 +84,9 @@ def recipe_update(request, slug):
 @login_required
 def recipe_delete(request, slug):
     obj = get_object_or_404(Recipe, slug=slug)
+    if request.user != obj.author:
+        if not request.user.is_superuser:
+            return HttpResponse('<h1>What are you doing?</h1>')
     if request.method == 'POST':
         obj.delete()
         messages.error(request, f"<b>{obj.title}</b> ochirildi")
@@ -129,6 +159,9 @@ def tag_create(request):
 def ing_create(request, recipe_slug, *args, **kwargs):
     form = RecipeIngredientForm()
     recipe = get_object_or_404(Recipe, slug=recipe_slug)
+    if request.user != recipe.author:
+        if not request.user.is_superuser:
+            return HttpResponse('<h1>What are you doing?</h1>')
     if request.method == 'POST':
         form = RecipeIngredientForm(request.POST)
         if form.is_valid():
@@ -147,6 +180,9 @@ def ing_update(request, recipe_slug, pk):
     obj = get_object_or_404(RecipeIngredient, id=pk)
     recipe = get_object_or_404(Recipe, slug=recipe_slug)
     form = RecipeIngredientForm(instance=obj)
+    if request.user != recipe.author:
+        if not request.user.is_superuser:
+            return HttpResponse('<h1>What are you doing?</h1>')
     if request.method == 'POST':
         form = RecipeIngredientForm(request.POST, instance=obj)
         if form.is_valid():
@@ -162,6 +198,9 @@ def ing_update(request, recipe_slug, pk):
 def ing_delete(request, recipe_slug, pk):
     obj = get_object_or_404(RecipeIngredient, id=pk)
     recipe = get_object_or_404(Recipe, slug=recipe_slug)
+    if request.user != recipe.author:
+        if not request.user.is_superuser:
+            return HttpResponse('<h1>What are you doing?</h1>')
     if request.method == 'POST':
         obj.delete()
         messages.error(request, f"<b>{obj.title}</b> ochirildi")
